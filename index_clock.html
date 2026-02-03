@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Multi-Style Clock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Roboto+Mono:wght@500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- BASE (Commun à tous) --- */
+        body { 
+            margin: 0; padding: 0; 
+            height: 100vh; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            background-color: transparent;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        .clock-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        
+        /* --- THÈME 0: DEFAULT (Google Minimalist) --- */
+        body.theme-default { font-family: 'Roboto', sans-serif; color: #333; }
+        .theme-default .time { font-size: 5rem; font-weight: 300; line-height: 1; letter-spacing: -2px; }
+        .theme-default .date { font-size: 1.1rem; opacity: 0.7; margin-top: 5px; text-transform: capitalize; }
+        @media (prefers-color-scheme: dark) { body.theme-default { color: #eee; } }
+
+        /* --- THÈME 1: FLIP (Retro Cards) --- */
+        body.theme-flip { font-family: 'Roboto', sans-serif; color: #fff; }
+        .theme-flip .time { display: flex; gap: 10px; font-size: 4rem; font-weight: 700; }
+        .theme-flip .time span:not(.colon) {
+            background: #333; padding: 5px 15px; border-radius: 8px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        .theme-flip .colon { color: #333; animation: blink 1s infinite; position: relative; top: -5px;}
+        .theme-flip .date { 
+            color: #333; margin-top: 15px; font-weight: 700; 
+            letter-spacing: 2px; font-size: 0.9rem; text-transform: uppercase; 
+        }
+        /* Dark mode spécifique pour le Flip */
+        @media (prefers-color-scheme: dark) {
+            .theme-flip .time span:not(.colon) { background: #eee; color: #222; }
+            .theme-flip .colon { color: #eee; }
+            .theme-flip .date { color: #eee; }
+        }
+
+        /* --- THÈME 2: TERMINAL (Hacker) --- */
+        body.theme-terminal { font-family: 'Roboto Mono', monospace; color: #00ff41; text-shadow: 0 0 5px rgba(0,255,65,0.5); }
+        .theme-terminal .time { font-size: 3.5rem; font-weight: 500; }
+        .theme-terminal .time::before { content: '> '; opacity: 0.8; font-size: 0.8em; }
+        .theme-terminal .time::after { content: '_'; animation: blink 1s infinite step-end; }
+        .theme-terminal .date { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; color: #00ff41; }
+        .theme-terminal .colon { animation: none; }
+
+        /* --- THÈME 3: SERIF (Éditorial/Luxe) --- */
+        body.theme-serif { font-family: 'Playfair Display', serif; color: #222; }
+        .theme-serif .time { font-size: 5.5rem; font-style: italic; line-height: 0.9; }
+        .theme-serif .date { font-family: 'Roboto', sans-serif; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 10px; border-top: 1px solid #222; padding-top: 5px; }
+        @media (prefers-color-scheme: dark) { 
+            body.theme-serif { color: #f4f4f4; }
+            .theme-serif .date { border-top-color: #f4f4f4; }
+        }
+
+        /* --- THÈME 4: NEON (Cyberpunk) --- */
+        body.theme-neon { font-family: 'Orbitron', sans-serif; color: #fff; }
+        .theme-neon .time { 
+            font-size: 4rem; 
+            text-shadow: 0 0 10px #00e6e6, 0 0 20px #00e6e6, 0 0 40px #00e6e6;
+            color: #e0ffff;
+        }
+        .theme-neon .date { 
+            margin-top: 10px; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase;
+            text-shadow: 0 0 5px #ff00de, 0 0 10px #ff00de;
+            color: #ffccff;
+        }
+
+        /* Animation Blink */
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        /* Cacher la séparation si le style n'en veut pas */
+        .hide-colon .colon { display: none; }
+        
+    </style>
+</head>
+<body class="theme-default"> <div class="clock-container">
+        <div class="time" id="timeDisplay"></div>
+        <div class="date" id="dateDisplay"></div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const params = new URLSearchParams(window.location.search);
+        const THEME = params.get('theme') || 'default'; // default, flip, terminal, serif, neon
+        const SHOW_SECONDS = params.get('seconds') === 'true';
+        const IS_12H = params.get('format') === '12';
+
+        // Application du thème au body
+        document.body.className = `theme-${THEME}`;
+
+        const timeEl = document.getElementById('timeDisplay');
+        const dateEl = document.getElementById('dateDisplay');
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            // Format 12h
+            if (IS_12H) {
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+            } else {
+                hours = String(hours).padStart(2, '0');
+            }
+
+            // Construction HTML différente selon les thèmes si besoin
+            let separator = ':';
+            // Pour le thème Flip, on structure différemment pour les cases
+            if (THEME === 'flip') {
+                timeEl.innerHTML = `<span>${hours}</span><span class="colon">:</span><span>${minutes}</span>` + (SHOW_SECONDS ? `<span class="colon">:</span><span>${seconds}</span>` : '');
+            } 
+            else {
+                // Thèmes Textuels
+                let timeText = `${hours}:${minutes}`;
+                if (SHOW_SECONDS) timeText += `:${seconds}`;
+                
+                // Pour le terminal on n'injecte que du texte
+                if (THEME === 'terminal') {
+                    timeEl.textContent = timeText;
+                } else {
+                    // Pour les autres, on garde le span colon pour l'animation éventuelle
+                    timeEl.innerHTML = timeText.replace(/:/g, '<span class="colon">:</span>');
+                }
+            }
+
+            // Date
+            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+            // Petite variation pour le terminal (date courte)
+            if (THEME === 'terminal') {
+                const d = now.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                dateEl.textContent = d.toLowerCase().replace('.', '').replace(/ /g, '_');
+            } else {
+                dateEl.textContent = now.toLocaleDateString('fr-FR', dateOptions);
+            }
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+    </script>
+</body>
+</html>
