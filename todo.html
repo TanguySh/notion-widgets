@@ -3,27 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Minimalist Todo</title>
+    <title>Notion Minimalist To-Do</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* --- BASE (Cohérent avec Horloge/Météo) --- */
+        /* --- BASE --- */
         body {
             margin: 0; padding: 0;
             font-family: 'Roboto', sans-serif;
             color: #3c4043;
             background-color: transparent;
             height: 100vh;
-            overflow: hidden; /* On gère le scroll dans le container */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* Mode Sombre */
         @media (prefers-color-scheme: dark) {
             body { color: #e8eaed; }
             input { color: #e8eaed !important; }
             .task-item { border-bottom-color: rgba(255,255,255,0.1) !important; }
+            .clear-all-btn { color: #9aa0a6 !important; }
+            .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; }
         }
 
         .container {
@@ -33,28 +34,55 @@
             display: flex;
             flex-direction: column;
             padding-top: 10px;
+            position: relative;
         }
 
-        /* --- HEADER & INPUT --- */
-        .header {
-            margin-bottom: 15px;
+        /* --- HEADER AVEC BOUTON CLEAR --- */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
         
         h1 {
             font-size: 1.2rem;
             font-weight: 500;
-            margin: 0 0 10px 0;
-            opacity: 0.8;
+            margin: 0;
+            opacity: 0.9;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-align: left;
         }
 
-        .input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
+        /* Bouton "Tout effacer" discret */
+        .clear-all-btn {
+            font-size: 0.75rem;
+            color: #5f6368;
+            background: transparent;
+            border: 1px solid rgba(128,128,128,0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: 500;
+            opacity: 0; /* Caché par défaut */
+            pointer-events: none;
         }
+
+        .clear-all-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .clear-all-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: #d93025; /* Rouge Google au survol */
+            border-color: #d93025;
+        }
+
+        /* --- INPUT --- */
+        .input-group { position: relative; display: flex; align-items: center; margin-bottom: 5px; }
 
         input {
             width: 100%;
@@ -68,21 +96,17 @@
             transition: border-color 0.3s;
             color: #3c4043;
         }
+        input:focus { border-bottom-color: #4285f4; }
 
-        input:focus {
-            border-bottom-color: #4285f4; /* Google Blue */
-        }
-
-        /* --- LISTE DES TÂCHES --- */
+        /* --- LISTE --- */
         ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            overflow-y: auto; /* Scroll si la liste est longue */
+            overflow-y: auto;
             flex-grow: 1;
-            /* Scrollbar invisible mais fonctionnelle */
-            scrollbar-width: none; 
-            -ms-overflow-style: none;
+            scrollbar-width: none;
+            padding-bottom: 20px;
         }
         ul::-webkit-scrollbar { display: none; }
 
@@ -92,10 +116,8 @@
             padding: 10px 0;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             animation: fadeIn 0.3s ease;
-            group: item;
         }
 
-        /* --- CHECKBOX CUSTOM --- */
         .checkbox {
             width: 18px;
             height: 18px;
@@ -110,35 +132,13 @@
             flex-shrink: 0;
         }
 
-        /* État coché */
-        .task-item.completed .checkbox {
-            background-color: #4285f4;
-            border-color: #4285f4;
-        }
-
-        .task-item.completed span {
-            text-decoration: line-through;
-            opacity: 0.5;
-        }
-
-        /* Icône check SVG */
-        .check-icon {
-            width: 12px;
-            height: 12px;
-            fill: white;
-            display: none;
-        }
+        .task-item.completed .checkbox { background-color: #4285f4; border-color: #4285f4; }
+        .task-item.completed span { text-decoration: line-through; opacity: 0.5; }
+        .check-icon { width: 12px; height: 12px; fill: white; display: none; }
         .task-item.completed .check-icon { display: block; }
 
-        /* Texte */
-        .task-text {
-            flex-grow: 1;
-            font-size: 0.95rem;
-            cursor: pointer;
-            word-break: break-word;
-        }
+        .task-text { flex-grow: 1; font-size: 0.95rem; cursor: pointer; word-break: break-word; }
 
-        /* --- BOUTON DELETE --- */
         .delete-btn {
             opacity: 0;
             background: none;
@@ -148,11 +148,8 @@
             transition: opacity 0.2s;
             color: #9aa0a6;
         }
-        
         .delete-btn svg { width: 16px; height: 16px; fill: currentColor; }
         .delete-btn:hover { color: #ff6b6b; }
-
-        /* Afficher delete au survol de la ligne */
         .task-item:hover .delete-btn { opacity: 1; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -161,42 +158,51 @@
 <body>
 
     <div class="container">
-        <h1 id="listTitle">Tâches</h1>
+        <div class="header-row">
+            <h1 id="listTitle">To-Do List</h1>
+            <button id="clearBtn" class="clear-all-btn" onclick="clearAll()">Tout effacer</button>
+        </div>
         
         <div class="input-group">
             <input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off">
         </div>
 
-        <ul id="taskList">
-            </ul>
+        <ul id="taskList"></ul>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- CONFIG ---
         const params = new URLSearchParams(window.location.search);
-        const LIST_NAME = params.get('name') || 'todo_default'; // Permet d'avoir plusieurs listes différentes
-        const TITLE = params.get('title') || 'Tâches';
+        const LIST_NAME = params.get('name') || 'default'; 
+        // Titre par défaut changé ici
+        const TITLE = params.get('title') || 'To-Do List';
         
-        // Mise à jour du titre
-        document.getElementById('listTitle').textContent = TITLE;
-        // Si on veut cacher le titre : ?title=none
-        if(TITLE === 'none') document.getElementById('listTitle').style.display = 'none';
+        const titleEl = document.getElementById('listTitle');
+        titleEl.textContent = TITLE;
+        if(TITLE === 'none') titleEl.style.display = 'none';
 
-        // --- GESTION DES DONNÉES (LocalStorage) ---
-        const STORAGE_KEY = `notion_todo_${LIST_NAME}`;
-        
+        // --- DATA ---
+        const STORAGE_KEY = `notion_todo_v2_${LIST_NAME}`;
         let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const input = document.getElementById('taskInput');
         const list = document.getElementById('taskList');
+        const clearBtn = document.getElementById('clearBtn');
 
-        // --- RENDU ---
+        // --- RENDER ---
         function render() {
             list.innerHTML = '';
+            
+            // Gestion de la visibilité du bouton "Tout effacer"
+            if (tasks.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+
             tasks.forEach((task, index) => {
                 const li = document.createElement('li');
                 li.className = `task-item ${task.done ? 'completed' : ''}`;
-                
                 li.innerHTML = `
                     <div class="checkbox" onclick="toggleTask(${index})">
                         <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -229,20 +235,25 @@
             render();
         }
 
+        // NOUVELLE FONCTION : TOUT EFFACER
+        function clearAll() {
+            // Petite sécurité : confirmation simple
+            if(confirm("Voulez-vous vraiment effacer toute la liste ?")) {
+                tasks = [];
+                render();
+            }
+        }
+
         function save() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         }
 
         // --- EVENTS ---
         input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                addTask(input.value);
-            }
+            if (e.key === 'Enter') addTask(input.value);
         });
 
-        // Init
         render();
-
     </script>
 </body>
 </html>
