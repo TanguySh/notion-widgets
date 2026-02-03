@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Minimalist Todo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* --- BASE (Cohérent avec Horloge/Météo) --- */
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Roboto', sans-serif;
+            color: #3c4043;
+            background-color: transparent;
+            height: 100vh;
+            overflow: hidden; /* On gère le scroll dans le container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Mode Sombre */
+        @media (prefers-color-scheme: dark) {
+            body { color: #e8eaed; }
+            input { color: #e8eaed !important; }
+            .task-item { border-bottom-color: rgba(255,255,255,0.1) !important; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 320px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding-top: 10px;
+        }
+
+        /* --- HEADER & INPUT --- */
+        .header {
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin: 0 0 10px 0;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: left;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(128,128,128,0.3);
+            padding: 8px 0;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+            color: #3c4043;
+        }
+
+        input:focus {
+            border-bottom-color: #4285f4; /* Google Blue */
+        }
+
+        /* --- LISTE DES TÂCHES --- */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto; /* Scroll si la liste est longue */
+            flex-grow: 1;
+            /* Scrollbar invisible mais fonctionnelle */
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+        }
+        ul::-webkit-scrollbar { display: none; }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease;
+            group: item;
+        }
+
+        /* --- CHECKBOX CUSTOM --- */
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #9aa0a6;
+            border-radius: 4px;
+            margin-right: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        /* État coché */
+        .task-item.completed .checkbox {
+            background-color: #4285f4;
+            border-color: #4285f4;
+        }
+
+        .task-item.completed span {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        /* Icône check SVG */
+        .check-icon {
+            width: 12px;
+            height: 12px;
+            fill: white;
+            display: none;
+        }
+        .task-item.completed .check-icon { display: block; }
+
+        /* Texte */
+        .task-text {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            cursor: pointer;
+            word-break: break-word;
+        }
+
+        /* --- BOUTON DELETE --- */
+        .delete-btn {
+            opacity: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            transition: opacity 0.2s;
+            color: #9aa0a6;
+        }
+        
+        .delete-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        .delete-btn:hover { color: #ff6b6b; }
+
+        /* Afficher delete au survol de la ligne */
+        .task-item:hover .delete-btn { opacity: 1; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="listTitle">Tâches</h1>
+        
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off">
+        </div>
+
+        <ul id="taskList">
+            </ul>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const params = new URLSearchParams(window.location.search);
+        const LIST_NAME = params.get('name') || 'todo_default'; // Permet d'avoir plusieurs listes différentes
+        const TITLE = params.get('title') || 'Tâches';
+        
+        // Mise à jour du titre
+        document.getElementById('listTitle').textContent = TITLE;
+        // Si on veut cacher le titre : ?title=none
+        if(TITLE === 'none') document.getElementById('listTitle').style.display = 'none';
+
+        // --- GESTION DES DONNÉES (LocalStorage) ---
+        const STORAGE_KEY = `notion_todo_${LIST_NAME}`;
+        
+        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const input = document.getElementById('taskInput');
+        const list = document.getElementById('taskList');
+
+        // --- RENDU ---
+        function render() {
+            list.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.done ? 'completed' : ''}`;
+                
+                li.innerHTML = `
+                    <div class="checkbox" onclick="toggleTask(${index})">
+                        <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                    <span class="task-text" onclick="toggleTask(${index})">${task.text}</span>
+                    <button class="delete-btn" onclick="deleteTask(${index})">
+                        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                `;
+                list.appendChild(li);
+            });
+            save();
+        }
+
+        // --- ACTIONS ---
+        function addTask(text) {
+            if (!text.trim()) return;
+            tasks.push({ text: text, done: false });
+            input.value = '';
+            render();
+        }
+
+        function toggleTask(index) {
+            tasks[index].done = !tasks[index].done;
+            render();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            render();
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        // --- EVENTS ---
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask(input.value);
+            }
+        });
+
+        // Init
+        render();
+
+    </script>
+</body>
+</html>
