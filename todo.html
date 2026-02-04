@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Minimalist To-Do</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>Notion Harmony To-Do</title>
     <style>
+        /* --- VARIABLES CSS --- */
+        :root {
+            /* Sera écrasée par le JS pour le fond de la case */
+            --accent-color: #4285f4; 
+            /* Sera écrasée par le JS pour la couleur de la coche (suit la couleur du texte) */
+            --checkmark-color: white; 
+        }
+
         /* --- BASE --- */
         body {
             margin: 0; padding: 0;
-            font-family: 'Roboto', sans-serif;
-            color: #3c4043;
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            color: #37352f;
             background-color: transparent;
             height: 100vh;
             overflow: hidden;
@@ -20,11 +27,11 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            body { color: #e8eaed; }
-            input { color: #e8eaed !important; }
-            .task-item { border-bottom-color: rgba(255,255,255,0.1) !important; }
-            .clear-all-btn { color: #9aa0a6 !important; }
-            .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; }
+            body { color: #d4d4d4; }
+            input { color: #d4d4d4 !important; }
+            .task-item { border-bottom-color: rgba(255,255,255,0.06) !important; }
+            .clear-all-btn { color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.2) !important; } 
+            .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; color: #ff6b6b !important; }
         }
 
         .container {
@@ -37,48 +44,78 @@
             position: relative;
         }
 
-        /* --- HEADER AVEC BOUTON CLEAR --- */
-        .header-row {
+        /* --- HEADER --- */
+        .header-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            justify-content: space-between; 
         }
         
         h1 {
-            font-size: 1.2rem;
-            font-weight: 500;
+            font-size: 1.15rem;
+            font-weight: 600;
             margin: 0;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            opacity: 1;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            width: auto;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
         }
 
-        /* Bouton "Tout effacer" discret */
+        /* STYLE BANNIÈRE */
+        h1.chip-style {
+            width: 100%;
+            padding: 10px 0 10px 15px;
+            border-radius: 8px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Bouton Clear */
         .clear-all-btn {
-            font-size: 0.75rem;
-            color: #5f6368;
+            font-family: inherit;
+            font-size: 0.7rem;
+            color: #9b9a97;
             background: transparent;
-            border: 1px solid rgba(128,128,128,0.3);
+            border: 1px solid rgba(55, 53, 47, 0.16);
             border-radius: 4px;
-            padding: 4px 8px;
+            padding: 3px 8px;
             cursor: pointer;
             transition: all 0.2s;
-            text-transform: uppercase;
-            font-weight: 500;
-            opacity: 0; /* Caché par défaut */
+            opacity: 0;
             pointer-events: none;
         }
 
-        .clear-all-btn.visible {
-            opacity: 1;
-            pointer-events: auto;
+        .clear-all-btn.visible { opacity: 1; pointer-events: auto; }
+        
+        .clear-all-btn:hover {
+            background-color: rgba(55, 53, 47, 0.08);
+            color: #d93025;
+            border-color: #d93025;
         }
 
-        .clear-all-btn:hover {
-            background-color: rgba(0,0,0,0.05);
-            color: #d93025; /* Rouge Google au survol */
-            border-color: #d93025;
+        .header-wrapper.has-bg .clear-all-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+        }
+        .header-wrapper.has-bg .clear-all-btn:hover {
+            background: white;
+            color: #d93025;
         }
 
         /* --- INPUT --- */
@@ -88,15 +125,16 @@
             width: 100%;
             background: transparent;
             border: none;
-            border-bottom: 2px solid rgba(128,128,128,0.3);
+            border-bottom: 2px solid rgba(55, 53, 47, 0.16);
             padding: 8px 0;
-            font-family: 'Roboto', sans-serif;
-            font-size: 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
             outline: none;
             transition: border-color 0.3s;
-            color: #3c4043;
+            color: inherit;
         }
-        input:focus { border-bottom-color: #4285f4; }
+        input::placeholder { color: rgba(55, 53, 47, 0.4); }
+        input:focus { border-bottom-color: var(--accent-color); }
 
         /* --- LISTE --- */
         ul {
@@ -113,43 +151,54 @@
         .task-item {
             display: flex;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
             animation: fadeIn 0.3s ease;
         }
 
         .checkbox {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #9aa0a6;
-            border-radius: 4px;
-            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #9b9a97;
+            border-radius: 3px;
+            margin-right: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all 0.1s;
             flex-shrink: 0;
         }
 
-        .task-item.completed .checkbox { background-color: #4285f4; border-color: #4285f4; }
-        .task-item.completed span { text-decoration: line-through; opacity: 0.5; }
-        .check-icon { width: 12px; height: 12px; fill: white; display: none; }
+        /* État coché : Background dynamique + Bordure dynamique */
+        .task-item.completed .checkbox { 
+            background-color: var(--accent-color); 
+            border-color: var(--accent-color); 
+        }
+        
+        .task-item.completed span { text-decoration: line-through; opacity: 0.4; color: #9b9a97; }
+        
+        /* Coche SVG : couleur dynamique via variable */
+        .check-icon { 
+            width: 10px; height: 10px; 
+            fill: var(--checkmark-color); /* ICI : Couleur synchro avec le texte */
+            display: none; 
+        }
         .task-item.completed .check-icon { display: block; }
 
-        .task-text { flex-grow: 1; font-size: 0.95rem; cursor: pointer; word-break: break-word; }
+        .task-text { flex-grow: 1; font-size: 0.95rem; cursor: pointer; word-break: break-word; line-height: 1.5; }
 
         .delete-btn {
             opacity: 0;
             background: none;
             border: none;
             cursor: pointer;
-            padding: 5px;
+            padding: 4px;
             transition: opacity 0.2s;
-            color: #9aa0a6;
+            color: #9b9a97;
         }
-        .delete-btn svg { width: 16px; height: 16px; fill: currentColor; }
-        .delete-btn:hover { color: #ff6b6b; }
+        .delete-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        .delete-btn:hover { color: #eb5757; }
         .task-item:hover .delete-btn { opacity: 1; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -158,9 +207,9 @@
 <body>
 
     <div class="container">
-        <div class="header-row">
+        <div class="header-wrapper" id="headerWrapper">
             <h1 id="listTitle">To-Do List</h1>
-            <button id="clearBtn" class="clear-all-btn" onclick="clearAll()">Tout effacer</button>
+            <button id="clearBtn" class="clear-all-btn" onclick="clearAll()">Clear</button>
         </div>
         
         <div class="input-group">
@@ -174,31 +223,70 @@
         // --- CONFIG ---
         const params = new URLSearchParams(window.location.search);
         const LIST_NAME = params.get('name') || 'default'; 
-        // Titre par défaut changé ici
         const TITLE = params.get('title') || 'To-Do List';
-        
+        const BG_COLOR = params.get('bg'); 
+        const TEXT_COLOR = params.get('color');
+
         const titleEl = document.getElementById('listTitle');
+        const headerWrapper = document.getElementById('headerWrapper');
         titleEl.textContent = TITLE;
-        if(TITLE === 'none') titleEl.style.display = 'none';
+
+        const googleColors = {
+            'blue': '#4285f4', 'red': '#ea4335', 'yellow': '#fbbc04', 
+            'green': '#34a853', 'black': '#37352f', 'grey': '#9aa0a6',
+            'pastel-green': '#dbeddb', 'pastel-red': '#ffeef0', 'pastel-blue': '#e3f2fd'
+        };
+
+        // --- APPLICATION DES COULEURS ---
+        if (BG_COLOR) {
+            titleEl.classList.add('chip-style');
+            headerWrapper.classList.add('has-bg');
+            
+            const finalBgColor = googleColors[BG_COLOR] || BG_COLOR;
+            let finalTextColor = 'white'; // Valeur par défaut
+
+            // 1. Fond
+            titleEl.style.backgroundColor = finalBgColor;
+            // Variable pour le fond de la checkbox
+            document.documentElement.style.setProperty('--accent-color', finalBgColor);
+
+            // 2. Texte et Coche
+            if (TEXT_COLOR) {
+                finalTextColor = TEXT_COLOR;
+            } else {
+                // Calcul auto si pas de couleur précisée
+                const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb');
+                finalTextColor = isLight ? '#37352f' : 'white';
+            }
+            
+            titleEl.style.color = finalTextColor;
+            // Variable pour la couleur de la coche SVG
+            document.documentElement.style.setProperty('--checkmark-color', finalTextColor);
+
+        } else {
+            // Mode normal sans fond
+            titleEl.style.textAlign = 'left';
+            titleEl.style.width = 'auto';
+            titleEl.style.padding = '0';
+        }
+
+        if(TITLE === 'none') {
+            titleEl.style.display = 'none';
+            headerWrapper.style.display = 'none';
+        }
 
         // --- DATA ---
-        const STORAGE_KEY = `notion_todo_v2_${LIST_NAME}`;
+        const STORAGE_KEY = `notion_todo_v8_${LIST_NAME}`;
         let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const input = document.getElementById('taskInput');
         const list = document.getElementById('taskList');
         const clearBtn = document.getElementById('clearBtn');
 
-        // --- RENDER ---
         function render() {
             list.innerHTML = '';
-            
-            // Gestion de la visibilité du bouton "Tout effacer"
-            if (tasks.length > 0) {
-                clearBtn.classList.add('visible');
-            } else {
-                clearBtn.classList.remove('visible');
-            }
+            if (tasks.length > 0) clearBtn.classList.add('visible');
+            else clearBtn.classList.remove('visible');
 
             tasks.forEach((task, index) => {
                 const li = document.createElement('li');
@@ -217,42 +305,18 @@
             save();
         }
 
-        // --- ACTIONS ---
         function addTask(text) {
             if (!text.trim()) return;
             tasks.push({ text: text, done: false });
             input.value = '';
             render();
         }
+        function toggleTask(index) { tasks[index].done = !tasks[index].done; render(); }
+        function deleteTask(index) { tasks.splice(index, 1); render(); }
+        function clearAll() { if(confirm("Effacer tout ?")) { tasks = []; render(); } }
+        function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
 
-        function toggleTask(index) {
-            tasks[index].done = !tasks[index].done;
-            render();
-        }
-
-        function deleteTask(index) {
-            tasks.splice(index, 1);
-            render();
-        }
-
-        // NOUVELLE FONCTION : TOUT EFFACER
-        function clearAll() {
-            // Petite sécurité : confirmation simple
-            if(confirm("Voulez-vous vraiment effacer toute la liste ?")) {
-                tasks = [];
-                render();
-            }
-        }
-
-        function save() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        }
-
-        // --- EVENTS ---
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTask(input.value);
-        });
-
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(input.value); });
         render();
     </script>
 </body>
