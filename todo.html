@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Harmony To-Do</title>
+    <title>Notion To-Do Aligned</title>
     <style>
         /* --- VARIABLES CSS --- */
         :root {
-            /* Sera écrasée par le JS pour le fond de la case */
             --accent-color: #4285f4; 
-            /* Sera écrasée par le JS pour la couleur de la coche (suit la couleur du texte) */
             --checkmark-color: white; 
         }
 
@@ -19,11 +17,11 @@
             font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
             color: #37352f;
             background-color: transparent;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            /* Alignement identique au Habit Tracker */
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: center; 
         }
 
         @media (prefers-color-scheme: dark) {
@@ -36,19 +34,19 @@
 
         .container {
             width: 90%;
-            max-width: 320px;
-            height: 100%;
+            /* Valeur par défaut, écrasée par le JS si ?width=... */
+            max-width: 350px; 
+            height: auto;
             display: flex;
             flex-direction: column;
             padding-top: 10px;
-            position: relative;
         }
 
-        /* --- HEADER --- */
+        /* --- HEADER (Copie exacte du Habit Tracker) --- */
         .header-wrapper {
             position: relative;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Même marge que Habit Tracker */
             display: flex;
             align-items: center;
             justify-content: space-between; 
@@ -60,23 +58,23 @@
             margin: 0;
             opacity: 1;
             letter-spacing: -0.02em;
-            line-height: 1.2;
             width: auto;
             transition: all 0.3s ease;
-            box-sizing: border-box;
         }
 
-        /* STYLE BANNIÈRE */
+        /* STYLE BANNIÈRE - CALIBRÉ PIXEL PERFECT */
         h1.chip-style {
             width: 100%;
-            padding: 10px 0 10px 15px;
+            padding: 10px 0 10px 15px; /* Padding identique */
             border-radius: 8px;
             text-align: left;
             text-transform: uppercase;
             font-size: 1rem;
+            line-height: 1.5; /* Hauteur de ligne fixée pour match exact */
             letter-spacing: 0.5px;
             font-weight: 600;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-sizing: border-box; /* Important pour que le padding ne casse pas la hauteur */
         }
 
         /* Bouton Clear */
@@ -96,106 +94,55 @@
 
         .clear-all-btn.visible { opacity: 1; pointer-events: auto; }
         
-        .clear-all-btn:hover {
-            background-color: rgba(55, 53, 47, 0.08);
-            color: #d93025;
-            border-color: #d93025;
-        }
+        .clear-all-btn:hover { background-color: rgba(55, 53, 47, 0.08); color: #d93025; border-color: #d93025; }
 
         .header-wrapper.has-bg .clear-all-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            background: rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(255,255,255,0.3);
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10;
+            background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3);
             backdrop-filter: blur(2px);
         }
-        .header-wrapper.has-bg .clear-all-btn:hover {
-            background: white;
-            color: #d93025;
-        }
+        .header-wrapper.has-bg .clear-all-btn:hover { background: white; color: #d93025; }
 
         /* --- INPUT --- */
-        .input-group { position: relative; display: flex; align-items: center; margin-bottom: 5px; }
+        .input-group { 
+            margin-top: 10px; /* Espace fixe, plus de 'auto' */
+            position: relative; display: flex; align-items: center; 
+        }
 
         input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid rgba(55, 53, 47, 0.16);
-            padding: 8px 0;
-            font-family: inherit;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.3s;
-            color: inherit;
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(55, 53, 47, 0.16); padding: 8px 0;
+            font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.3s; color: inherit;
         }
         input::placeholder { color: rgba(55, 53, 47, 0.4); }
         input:focus { border-bottom-color: var(--accent-color); }
 
         /* --- LISTE --- */
         ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex-grow: 1;
-            scrollbar-width: none;
-            padding-bottom: 20px;
+            list-style: none; padding: 0; margin: 0; 
+            flex-grow: 0; /* Ne force pas la hauteur */
+            height: auto;
+            width: 100%;
         }
-        ul::-webkit-scrollbar { display: none; }
 
         .task-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
-            animation: fadeIn 0.3s ease;
+            display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55, 53, 47, 0.09); animation: fadeIn 0.3s ease;
         }
 
         .checkbox {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #9b9a97;
-            border-radius: 3px;
-            margin-right: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-            flex-shrink: 0;
+            width: 16px; height: 16px; border: 2px solid #9b9a97; border-radius: 3px; margin-right: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; flex-shrink: 0;
         }
 
-        /* État coché : Background dynamique + Bordure dynamique */
-        .task-item.completed .checkbox { 
-            background-color: var(--accent-color); 
-            border-color: var(--accent-color); 
-        }
-        
+        .task-item.completed .checkbox { background-color: var(--accent-color); border-color: var(--accent-color); }
         .task-item.completed span { text-decoration: line-through; opacity: 0.4; color: #9b9a97; }
         
-        /* Coche SVG : couleur dynamique via variable */
-        .check-icon { 
-            width: 10px; height: 10px; 
-            fill: var(--checkmark-color); /* ICI : Couleur synchro avec le texte */
-            display: none; 
-        }
+        .check-icon { width: 10px; height: 10px; fill: var(--checkmark-color); display: none; }
         .task-item.completed .check-icon { display: block; }
 
         .task-text { flex-grow: 1; font-size: 0.95rem; cursor: pointer; word-break: break-word; line-height: 1.5; }
 
         .delete-btn {
-            opacity: 0;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            transition: opacity 0.2s;
-            color: #9b9a97;
+            opacity: 0; background: none; border: none; cursor: pointer; padding: 4px; transition: opacity 0.2s; color: #9b9a97;
         }
         .delete-btn svg { width: 14px; height: 14px; fill: currentColor; }
         .delete-btn:hover { color: #eb5757; }
@@ -206,17 +153,17 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="mainContainer">
         <div class="header-wrapper" id="headerWrapper">
             <h1 id="listTitle">To-Do List</h1>
             <button id="clearBtn" class="clear-all-btn" onclick="clearAll()">Clear</button>
         </div>
         
+        <ul id="taskList"></ul>
+
         <div class="input-group">
             <input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off">
         </div>
-
-        <ul id="taskList"></ul>
     </div>
 
     <script>
@@ -226,9 +173,21 @@
         const TITLE = params.get('title') || 'To-Do List';
         const BG_COLOR = params.get('bg'); 
         const TEXT_COLOR = params.get('color');
+        const WIDTH = params.get('width'); // Nouveau paramètre
 
         const titleEl = document.getElementById('listTitle');
         const headerWrapper = document.getElementById('headerWrapper');
+        const container = document.getElementById('mainContainer');
+
+        // GESTION LARGEUR
+        if (WIDTH === 'full') {
+            container.style.maxWidth = '100%';
+            container.style.width = '100%';
+        } else if (WIDTH) {
+            container.style.maxWidth = WIDTH + 'px';
+            container.style.width = '100%';
+        }
+
         titleEl.textContent = TITLE;
 
         const googleColors = {
@@ -237,31 +196,22 @@
             'pastel-green': '#dbeddb', 'pastel-red': '#ffeef0', 'pastel-blue': '#e3f2fd'
         };
 
-        // --- APPLICATION DES COULEURS ---
         if (BG_COLOR) {
             titleEl.classList.add('chip-style');
             headerWrapper.classList.add('has-bg');
-            
-            const finalBgColor = googleColors[BG_COLOR] || BG_COLOR;
-            let finalTextColor = 'white'; // Valeur par défaut
+            const finalBg = googleColors[BG_COLOR] || BG_COLOR;
+            let finalTx = 'white'; // Defaut
 
-            // 1. Fond
-            titleEl.style.backgroundColor = finalBgColor;
-            // Variable pour le fond de la checkbox
-            document.documentElement.style.setProperty('--accent-color', finalBgColor);
+            titleEl.style.backgroundColor = finalBg;
+            document.documentElement.style.setProperty('--accent-color', finalBg);
 
-            // 2. Texte et Coche
-            if (TEXT_COLOR) {
-                finalTextColor = TEXT_COLOR;
-            } else {
-                // Calcul auto si pas de couleur précisée
+            if (TEXT_COLOR) finalTx = TEXT_COLOR;
+            else {
                 const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb');
-                finalTextColor = isLight ? '#37352f' : 'white';
+                finalTx = isLight ? '#37352f' : 'white';
             }
-            
-            titleEl.style.color = finalTextColor;
-            // Variable pour la couleur de la coche SVG
-            document.documentElement.style.setProperty('--checkmark-color', finalTextColor);
+            titleEl.style.color = finalTx;
+            document.documentElement.style.setProperty('--checkmark-color', finalTx);
 
         } else {
             // Mode normal sans fond
@@ -276,7 +226,7 @@
         }
 
         // --- DATA ---
-        const STORAGE_KEY = `notion_todo_v8_${LIST_NAME}`;
+        const STORAGE_KEY = `notion_todo_v9_${LIST_NAME}`;
         let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         const input = document.getElementById('taskInput');
