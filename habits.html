@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Habit Tracker Width Control</title>
+    <style>
+        /* --- VARIABLES --- */
+        :root {
+            --accent-color: #4285f4; 
+            --text-on-accent: white;
+            --item-width: 22px;
+            --gap-width: 4px;
+        }
+
+        /* --- BASE --- */
+        body {
+            margin: 0; padding: 0;
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            color: #37352f;
+            background-color: transparent;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centre le container si plus petit que l'écran */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body { color: #d4d4d4; }
+            input { color: #d4d4d4 !important; }
+            .habit-item { border-bottom-color: rgba(255,255,255,0.06) !important; }
+            .reset-btn { color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.2) !important; } 
+            .reset-btn:hover { background-color: rgba(255,255,255,0.1) !important; color: #ff6b6b !important; }
+            .day-letter { color: rgba(255,255,255,0.4) !important; }
+            .circle { border-color: rgba(255,255,255,0.2) !important; }
+        }
+
+        .container {
+            width: 90%;
+            /* Le max-width est géré par le JS maintenant, valeur par défaut CSS ici : */
+            max-width: 350px; 
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            padding-top: 10px;
+        }
+
+        /* --- HEADER --- */
+        .header-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+        }
+        
+        h1 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0;
+            opacity: 1;
+            letter-spacing: -0.02em;
+            width: auto;
+            transition: all 0.3s ease;
+        }
+
+        h1.chip-style {
+            width: 100%;
+            padding: 10px 0 10px 15px;
+            border-radius: 8px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-sizing: border-box; /* Important si on agrandit la largeur */
+        }
+
+        .reset-btn {
+            font-family: inherit;
+            font-size: 0.65rem;
+            color: #9b9a97;
+            background: transparent;
+            border: 1px solid rgba(55, 53, 47, 0.16);
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .reset-btn:hover { background-color: rgba(55, 53, 47, 0.08); color: #d93025; border-color: #d93025; }
+
+        .header-wrapper.has-bg .reset-btn {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10;
+            background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+        }
+        .header-wrapper.has-bg .reset-btn:hover { background: white; color: #d93025; }
+
+        /* --- JOURS --- */
+        .days-header {
+            display: flex;
+            justify-content: flex-end;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(55,53,47,0.05);
+            padding-right: 29px;
+            gap: var(--gap-width);
+        }
+        
+        .day-letter {
+            width: var(--item-width);
+            text-align: center;
+            font-size: 0.6rem;
+            color: #9b9a97;
+            font-weight: 600;
+            display: flex; justify-content: center;
+        }
+
+        /* --- LISTE --- */
+        ul {
+            list-style: none; padding: 0; margin: 0; 
+            flex-grow: 0; 
+            height: auto;
+            width: 100%;
+        }
+
+        .habit-item {
+            display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55, 53, 47, 0.09); animation: fadeIn 0.3s ease;
+        }
+
+        .habit-text {
+            flex-grow: 1; font-size: 0.9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px;
+        }
+
+        .week-grid { display: flex; gap: var(--gap-width); }
+
+        .circle {
+            width: var(--item-width);
+            height: var(--item-width);
+            border: 1.5px solid #d3d1cb;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: transparent;
+            box-sizing: border-box;
+        }
+
+        @media (prefers-color-scheme: dark) { .circle { border-color: #5a5a5a; } }
+
+        .circle:hover { border-color: var(--accent-color); }
+        .circle.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--text-on-accent);
+        }
+
+        /* --- DELETE BTN --- */
+        .delete-btn {
+            opacity: 0; background: none; border: none; cursor: pointer; padding: 0;
+            margin-left: 5px; transition: opacity 0.2s; color: #9b9a97;
+            width: 24px; height: 24px; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .delete-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        .delete-btn:hover { color: #eb5757; }
+        .habit-item:hover .delete-btn { opacity: 1; }
+
+        /* --- INPUT --- */
+        .input-group { 
+            margin-top: 10px; 
+            position: relative; display: flex; align-items: center; 
+        }
+
+        input {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(55, 53, 47, 0.16); padding: 8px 0;
+            font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.3s; color: inherit;
+        }
+        input::placeholder { color: rgba(55, 53, 47, 0.4); }
+        input:focus { border-bottom-color: var(--accent-color); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div class="header-wrapper" id="headerWrapper">
+            <h1 id="listTitle">Habitudes</h1>
+            <button id="resetBtn" class="reset-btn" onclick="resetWeek()">Reset Semaine</button>
+        </div>
+        
+        <div class="days-header">
+            <div class="day-letter">L</div>
+            <div class="day-letter">M</div>
+            <div class="day-letter">M</div>
+            <div class="day-letter">J</div>
+            <div class="day-letter">V</div>
+            <div class="day-letter">S</div>
+            <div class="day-letter">D</div>
+        </div>
+
+        <ul id="habitList"></ul>
+
+        <div class="input-group">
+            <input type="text" id="habitInput" placeholder="Nouvelle habitude..." autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const params = new URLSearchParams(window.location.search);
+        const LIST_NAME = params.get('name') || 'default'; 
+        const TITLE = params.get('title') || 'Habitudes';
+        const BG_COLOR = params.get('bg'); 
+        const TEXT_COLOR = params.get('color');
+        // NOUVEAU PARAMÈTRE
+        const WIDTH = params.get('width'); // 'full', '500', etc.
+
+        const titleEl = document.getElementById('listTitle');
+        const headerWrapper = document.getElementById('headerWrapper');
+        const container = document.getElementById('mainContainer');
+
+        // GESTION LARGEUR
+        if (WIDTH === 'full') {
+            container.style.maxWidth = '100%';
+            container.style.width = '100%';
+        } else if (WIDTH) {
+            // Si on met un chiffre (ex: 500)
+            container.style.maxWidth = WIDTH + 'px';
+            container.style.width = '100%';
+        }
+        // Sinon on garde le défaut CSS (350px)
+
+        titleEl.textContent = TITLE;
+
+        const googleColors = {
+            'blue': '#4285f4', 'red': '#ea4335', 'yellow': '#fbbc04', 
+            'green': '#34a853', 'black': '#37352f', 'grey': '#9aa0a6',
+            'pastel-green': '#dbeddb', 'pastel-red': '#ffeef0', 'pastel-blue': '#e3f2fd'
+        };
+
+        if (BG_COLOR) {
+            titleEl.classList.add('chip-style');
+            headerWrapper.classList.add('has-bg');
+            const finalBg = googleColors[BG_COLOR] || BG_COLOR;
+            let finalTx = 'white';
+            titleEl.style.backgroundColor = finalBg;
+            document.documentElement.style.setProperty('--accent-color', finalBg);
+            if (TEXT_COLOR) finalTx = TEXT_COLOR;
+            else {
+                const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb');
+                finalTx = isLight ? '#37352f' : 'white';
+            }
+            titleEl.style.color = finalTx;
+            document.documentElement.style.setProperty('--text-on-accent', finalTx);
+        } else {
+            titleEl.style.textAlign = 'left';
+        }
+        if(TITLE === 'none') {
+            titleEl.style.display = 'none';
+            headerWrapper.style.display = 'none';
+        }
+
+        // --- DATA ---
+        const STORAGE_KEY = `notion_habit_v11_${LIST_NAME}`;
+        let habits = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        const input = document.getElementById('habitInput');
+        const list = document.getElementById('habitList');
+
+        function render() {
+            list.innerHTML = '';
+            habits.forEach((habit, index) => {
+                const li = document.createElement('li');
+                li.className = 'habit-item';
+                let bubblesHtml = '';
+                habit.days.forEach((isActive, dayIndex) => {
+                    bubblesHtml += `
+                        <div class="circle ${isActive ? 'active' : ''}" 
+                             onclick="toggleDay(${index}, ${dayIndex})">
+                             ${isActive ? '✓' : ''}
+                        </div>`;
+                });
+
+                li.innerHTML = `
+                    <span class="habit-text" title="${habit.text}">${habit.text}</span>
+                    <div class="week-grid" id="grid-${index}">
+                        ${bubblesHtml}
+                    </div>
+                    <button class="delete-btn" onclick="deleteHabit(${index})">
+                        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function toggleDay(habitIndex, dayIndex) {
+            const newState = !habits[habitIndex].days[dayIndex];
+            habits[habitIndex].days[dayIndex] = newState;
+            const grid = document.getElementById(`grid-${habitIndex}`);
+            const bubble = grid.children[dayIndex];
+            if (newState) {
+                bubble.classList.add('active');
+                bubble.textContent = '✓';
+            } else {
+                bubble.classList.remove('active');
+                bubble.textContent = '';
+            }
+            save();
+        }
+
+        function addHabit(text) {
+            if (!text.trim()) return;
+            habits.push({ text: text, days: [false, false, false, false, false, false, false] });
+            input.value = '';
+            save();
+            render();
+        }
+
+        function deleteHabit(index) {
+            habits.splice(index, 1);
+            save();
+            render();
+        }
+
+        function resetWeek() {
+            if(confirm("Démarrer une nouvelle semaine ?")) {
+                habits.forEach(h => { h.days = [false, false, false, false, false, false, false]; });
+                save();
+                render();
+            }
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+        }
+
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addHabit(input.value); });
+        
+        render();
+    </script>
+</body>
+</html>
