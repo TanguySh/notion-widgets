@@ -3,25 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion To-Do Aligned</title>
+    <title>Notion Cloud To-Do</title>
     <style>
-        /* --- VARIABLES CSS --- */
-        :root {
-            --accent-color: #4285f4; 
-            --checkmark-color: white; 
-        }
+        /* --- VARIABLES --- */
+        :root { --accent-color: #4285f4; --checkmark-color: white; }
 
         /* --- BASE --- */
         body {
             margin: 0; padding: 0;
             font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-            color: #37352f;
-            background-color: transparent;
-            min-height: 100vh;
-            /* Alignement identique au Habit Tracker */
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
+            color: #37352f; background-color: transparent; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; 
         }
 
         @media (prefers-color-scheme: dark) {
@@ -30,125 +22,59 @@
             .task-item { border-bottom-color: rgba(255,255,255,0.06) !important; }
             .clear-all-btn { color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.2) !important; } 
             .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; color: #ff6b6b !important; }
+            .modal-box { background: #2f3437 !important; border-color: rgba(255,255,255,0.1) !important; }
+            .modal-box p { color: #d4d4d4; }
+            .btn-cancel { color: #d4d4d4 !important; border-color: rgba(255,255,255,0.2) !important; }
         }
 
-        .container {
-            width: 90%;
-            /* Valeur par défaut, écrasée par le JS si ?width=... */
-            max-width: 350px; 
-            height: auto;
-            display: flex;
-            flex-direction: column;
-            padding-top: 10px;
-        }
+        .container { width: 90%; max-width: 350px; height: auto; display: flex; flex-direction: column; padding-top: 10px; }
 
-        /* --- HEADER (Copie exacte du Habit Tracker) --- */
-        .header-wrapper {
-            position: relative;
-            width: 100%;
-            margin-bottom: 10px; /* Même marge que Habit Tracker */
-            display: flex;
-            align-items: center;
-            justify-content: space-between; 
-        }
-        
-        h1 {
-            font-size: 1.15rem;
-            font-weight: 600;
-            margin: 0;
-            opacity: 1;
-            letter-spacing: -0.02em;
-            width: auto;
-            transition: all 0.3s ease;
-        }
+        /* --- HEADER --- */
+        .header-wrapper { position: relative; width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        h1 { font-size: 1.15rem; font-weight: 600; margin: 0; opacity: 1; letter-spacing: -0.02em; width: auto; transition: all 0.3s ease; }
+        h1.chip-style { width: 100%; padding: 10px 0 10px 15px; border-radius: 8px; text-align: left; text-transform: uppercase; font-size: 1rem; line-height: 1.5; letter-spacing: 0.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); box-sizing: border-box; }
 
-        /* STYLE BANNIÈRE - CALIBRÉ PIXEL PERFECT */
-        h1.chip-style {
-            width: 100%;
-            padding: 10px 0 10px 15px; /* Padding identique */
-            border-radius: 8px;
-            text-align: left;
-            text-transform: uppercase;
-            font-size: 1rem;
-            line-height: 1.5; /* Hauteur de ligne fixée pour match exact */
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            box-sizing: border-box; /* Important pour que le padding ne casse pas la hauteur */
-        }
+        /* Loader Sync */
+        .sync-status { font-size: 0.7rem; color: #9aa0a6; margin-right: 5px; opacity: 0; transition: opacity 0.3s; }
+        .sync-status.visible { opacity: 1; }
 
-        /* Bouton Clear */
-        .clear-all-btn {
-            font-family: inherit;
-            font-size: 0.7rem;
-            color: #9b9a97;
-            background: transparent;
-            border: 1px solid rgba(55, 53, 47, 0.16);
-            border-radius: 4px;
-            padding: 3px 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            opacity: 0;
-            pointer-events: none;
-        }
-
+        .clear-all-btn { font-family: inherit; font-size: 0.7rem; color: #9b9a97; background: transparent; border: 1px solid rgba(55, 53, 47, 0.16); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.2s; opacity: 0; pointer-events: none; }
         .clear-all-btn.visible { opacity: 1; pointer-events: auto; }
-        
         .clear-all-btn:hover { background-color: rgba(55, 53, 47, 0.08); color: #d93025; border-color: #d93025; }
-
-        .header-wrapper.has-bg .clear-all-btn {
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10;
-            background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(2px);
-        }
+        .header-wrapper.has-bg .clear-all-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(2px); }
         .header-wrapper.has-bg .clear-all-btn:hover { background: white; color: #d93025; }
 
         /* --- INPUT --- */
-        .input-group { 
-            margin-top: 10px; /* Espace fixe, plus de 'auto' */
-            position: relative; display: flex; align-items: center; 
-        }
-
-        input {
-            width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(55, 53, 47, 0.16); padding: 8px 0;
-            font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.3s; color: inherit;
-        }
+        .input-group { margin-top: 10px; position: relative; display: flex; align-items: center; }
+        input { width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(55, 53, 47, 0.16); padding: 8px 0; font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.3s; color: inherit; }
         input::placeholder { color: rgba(55, 53, 47, 0.4); }
         input:focus { border-bottom-color: var(--accent-color); }
 
         /* --- LISTE --- */
-        ul {
-            list-style: none; padding: 0; margin: 0; 
-            flex-grow: 0; /* Ne force pas la hauteur */
-            height: auto;
-            width: 100%;
-        }
-
-        .task-item {
-            display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55, 53, 47, 0.09); animation: fadeIn 0.3s ease;
-        }
-
-        .checkbox {
-            width: 16px; height: 16px; border: 2px solid #9b9a97; border-radius: 3px; margin-right: 10px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; flex-shrink: 0;
-        }
-
+        ul { list-style: none; padding: 0; margin: 0; flex-grow: 0; height: auto; width: 100%; min-height: 20px;}
+        .task-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55, 53, 47, 0.09); animation: fadeIn 0.3s ease; }
+        .checkbox { width: 16px; height: 16px; border: 2px solid #9b9a97; border-radius: 3px; margin-right: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; flex-shrink: 0; }
         .task-item.completed .checkbox { background-color: var(--accent-color); border-color: var(--accent-color); }
         .task-item.completed span { text-decoration: line-through; opacity: 0.4; color: #9b9a97; }
-        
         .check-icon { width: 10px; height: 10px; fill: var(--checkmark-color); display: none; }
         .task-item.completed .check-icon { display: block; }
-
         .task-text { flex-grow: 1; font-size: 0.95rem; cursor: pointer; word-break: break-word; line-height: 1.5; }
-
-        .delete-btn {
-            opacity: 0; background: none; border: none; cursor: pointer; padding: 4px; transition: opacity 0.2s; color: #9b9a97;
-        }
+        .delete-btn { opacity: 0; background: none; border: none; cursor: pointer; padding: 4px; transition: opacity 0.2s; color: #9b9a97; }
         .delete-btn svg { width: 14px; height: 14px; fill: currentColor; }
         .delete-btn:hover { color: #eb5757; }
         .task-item:hover .delete-btn { opacity: 1; }
 
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); backdrop-filter: blur(3px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 80%; max-width: 260px; border: 1px solid rgba(0,0,0,0.1); text-align: center; animation: popIn 0.2s ease; }
+        .modal-msg { margin: 0 0 15px 0; font-size: 0.95rem; font-weight: 500; }
+        .modal-btns { display: flex; justify-content: center; gap: 10px; }
+        .modal-btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; font-family: inherit; }
+        .btn-cancel { background: transparent; color: #5f6368; border: 1px solid #dadce0; }
+        .btn-confirm { background: var(--accent-color); color: white; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -156,37 +82,58 @@
     <div class="container" id="mainContainer">
         <div class="header-wrapper" id="headerWrapper">
             <h1 id="listTitle">To-Do List</h1>
-            <button id="clearBtn" class="clear-all-btn" onclick="clearAll()">Clear</button>
+            <div style="display:flex; align-items:center;">
+                <span id="syncStatus" class="sync-status">Sync...</span>
+                <button id="clearBtn" class="clear-all-btn" onclick="openModal()">Clear</button>
+            </div>
         </div>
         
-        <ul id="taskList"></ul>
+        <ul id="taskList">
+            <li style="text-align:center; padding:20px; color:#999; font-size:0.8rem;">Chargement...</li>
+        </ul>
 
         <div class="input-group">
             <input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off">
         </div>
     </div>
 
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <p class="modal-msg">Effacer toute la liste ?</p>
+            <div class="modal-btns">
+                <button class="modal-btn btn-cancel" onclick="closeModal()">Annuler</button>
+                <button class="modal-btn btn-confirm" onclick="confirmClear()">Valider</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- CONFIG ---
+        // ============================================
+        // ⚠️ CONFIGURATION CLOUD (REMPLIS CECI !)
+        // ============================================
+        
+        // Remplace par ton ID de casier (ex: "65c4f...")
+        const BIN_ID = "6985f9a543b1c97be96a4813"; 
+        
+        // Remplace par ta clé API (ex: "$2a$10$...")
+        const API_KEY = "$2a$10$A/bxCPyTSD17CowfTI8XsO.bCVakowlw0adl3XUqkxxcd9Cb6eSua"; 
+
+        // ============================================
+
         const params = new URLSearchParams(window.location.search);
         const LIST_NAME = params.get('name') || 'default'; 
         const TITLE = params.get('title') || 'To-Do List';
         const BG_COLOR = params.get('bg'); 
         const TEXT_COLOR = params.get('color');
-        const WIDTH = params.get('width'); // Nouveau paramètre
+        const WIDTH = params.get('width');
 
         const titleEl = document.getElementById('listTitle');
         const headerWrapper = document.getElementById('headerWrapper');
         const container = document.getElementById('mainContainer');
+        const syncStatus = document.getElementById('syncStatus');
 
-        // GESTION LARGEUR
-        if (WIDTH === 'full') {
-            container.style.maxWidth = '100%';
-            container.style.width = '100%';
-        } else if (WIDTH) {
-            container.style.maxWidth = WIDTH + 'px';
-            container.style.width = '100%';
-        }
+        if (WIDTH === 'full') { container.style.maxWidth = '100%'; container.style.width = '100%'; } 
+        else if (WIDTH) { container.style.maxWidth = WIDTH + 'px'; container.style.width = '100%'; }
 
         titleEl.textContent = TITLE;
 
@@ -200,11 +147,9 @@
             titleEl.classList.add('chip-style');
             headerWrapper.classList.add('has-bg');
             const finalBg = googleColors[BG_COLOR] || BG_COLOR;
-            let finalTx = 'white'; // Defaut
-
+            let finalTx = 'white';
             titleEl.style.backgroundColor = finalBg;
             document.documentElement.style.setProperty('--accent-color', finalBg);
-
             if (TEXT_COLOR) finalTx = TEXT_COLOR;
             else {
                 const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb');
@@ -212,31 +157,97 @@
             }
             titleEl.style.color = finalTx;
             document.documentElement.style.setProperty('--checkmark-color', finalTx);
-
-        } else {
-            // Mode normal sans fond
-            titleEl.style.textAlign = 'left';
-            titleEl.style.width = 'auto';
-            titleEl.style.padding = '0';
-        }
-
-        if(TITLE === 'none') {
-            titleEl.style.display = 'none';
-            headerWrapper.style.display = 'none';
-        }
+        } else { titleEl.style.textAlign = 'left'; }
+        
+        if(TITLE === 'none') { titleEl.style.display = 'none'; headerWrapper.style.display = 'none'; }
 
         // --- DATA ---
-        const STORAGE_KEY = `notion_todo_v9_${LIST_NAME}`;
-        let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
+        let tasks = [];
         const input = document.getElementById('taskInput');
         const list = document.getElementById('taskList');
         const clearBtn = document.getElementById('clearBtn');
+        const modal = document.getElementById('customModal');
+        let saveTimeout;
 
+        // --- CLOUD FUNCTIONS ---
+        async function loadFromCloud() {
+            syncStatus.textContent = "Loading...";
+            syncStatus.classList.add('visible');
+            try {
+                // Si BIN_ID n'est pas rempli, on utilise localStorage comme fallback
+                if(BIN_ID.includes("REMPLACE")) {
+                    console.warn("Mode LocalStorage (Pas de clé API)");
+                    tasks = JSON.parse(localStorage.getItem(`notion_todo_${LIST_NAME}`)) || [];
+                    render();
+                    syncStatus.classList.remove('visible');
+                    return;
+                }
+
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                
+                if(response.ok) {
+                    const data = await response.json();
+                    // On gère plusieurs listes dans le même Bin si besoin via le nom
+                    // Mais pour faire simple ici, le Bin = La liste
+                    // Si tu veux séparer pro/perso, crée 2 Bins différents sur le site.
+                    tasks = data.record.tasks || []; 
+                } else {
+                    console.error("Erreur chargement cloud");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            render();
+            syncStatus.classList.remove('visible');
+        }
+
+        async function saveToCloud() {
+            syncStatus.textContent = "Saving...";
+            syncStatus.classList.add('visible');
+            
+            // Fallback LocalStorage
+            if(BIN_ID.includes("REMPLACE")) {
+                localStorage.setItem(`notion_todo_${LIST_NAME}`, JSON.stringify(tasks));
+                setTimeout(() => syncStatus.classList.remove('visible'), 500);
+                return;
+            }
+
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify({ tasks: tasks })
+                });
+            } catch(e) {
+                console.error("Erreur sauvegarde", e);
+                syncStatus.textContent = "Error";
+            }
+            
+            setTimeout(() => syncStatus.classList.remove('visible'), 1000);
+        }
+
+        // Système "Debounce" : on ne sauvegarde pas à chaque frappe, on attend 1s
+        function triggerSave() {
+            clearTimeout(saveTimeout);
+            syncStatus.textContent = "Pending...";
+            syncStatus.classList.add('visible');
+            saveTimeout = setTimeout(saveToCloud, 1000);
+        }
+
+        // --- UI FUNCTIONS ---
         function render() {
             list.innerHTML = '';
             if (tasks.length > 0) clearBtn.classList.add('visible');
             else clearBtn.classList.remove('visible');
+
+            if(tasks.length === 0) {
+                 // Liste vide visuelle si besoin
+            }
 
             tasks.forEach((task, index) => {
                 const li = document.createElement('li');
@@ -252,7 +263,17 @@
                 `;
                 list.appendChild(li);
             });
-            save();
+        }
+
+        // --- ACTIONS ---
+        function openModal() { modal.style.display = 'flex'; }
+        function closeModal() { modal.style.display = 'none'; }
+        
+        function confirmClear() {
+            tasks = [];
+            render();
+            triggerSave(); // Sauvegarde cloud
+            closeModal();
         }
 
         function addTask(text) {
@@ -260,14 +281,24 @@
             tasks.push({ text: text, done: false });
             input.value = '';
             render();
+            triggerSave(); // Sauvegarde cloud
         }
-        function toggleTask(index) { tasks[index].done = !tasks[index].done; render(); }
-        function deleteTask(index) { tasks.splice(index, 1); render(); }
-        function clearAll() { if(confirm("Effacer tout ?")) { tasks = []; render(); } }
-        function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+        function toggleTask(index) { 
+            tasks[index].done = !tasks[index].done; 
+            render(); 
+            triggerSave(); // Sauvegarde cloud
+        }
+        function deleteTask(index) { 
+            tasks.splice(index, 1); 
+            render(); 
+            triggerSave(); // Sauvegarde cloud
+        }
 
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(input.value); });
-        render();
+        
+        // Initialisation
+        loadFromCloud();
+
     </script>
 </body>
 </html>
