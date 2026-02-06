@@ -3,150 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Multi-Style Clock</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Roboto+Mono:wght@500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Orbitron:wght@500&display=swap" rel="stylesheet">
-    
+    <title>Notion Google Clock</title>
     <style>
-        /* --- BASE (Commun à tous) --- */
-        body { 
-            margin: 0; padding: 0; 
-            height: 100vh; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
+        /* --- VARIABLES --- */
+        :root {
+            --text-color: #37352f;
+            --accent-color: #4285f4;
+        }
+
+        /* --- BASE --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+            color: var(--text-color);
             background-color: transparent;
-            user-select: none;
-            transition: all 0.3s ease;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            
+            /* C'EST ICI QUE LA MAGIE DU CENTRAGE OPÈRE */
+            display: flex;
+            flex-direction: column;
+            align-items: center;     /* Centre Horizontalement */
+            justify-content: center; /* Centre Verticalement */
         }
-        .clock-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
-        
-        /* --- THÈME 0: DEFAULT (Google Minimalist) --- */
-        body.theme-default { font-family: 'Roboto', sans-serif; color: #333; }
-        .theme-default .time { font-size: 5rem; font-weight: 300; line-height: 1; letter-spacing: -2px; }
-        .theme-default .date { font-size: 1.1rem; opacity: 0.7; margin-top: 5px; text-transform: capitalize; }
-        @media (prefers-color-scheme: dark) { body.theme-default { color: #eee; } }
 
-        /* --- THÈME 1: FLIP (Retro Cards) --- */
-        body.theme-flip { font-family: 'Roboto', sans-serif; color: #fff; }
-        .theme-flip .time { display: flex; gap: 10px; font-size: 4rem; font-weight: 700; }
-        .theme-flip .time span:not(.colon) {
-            background: #333; padding: 5px 15px; border-radius: 8px;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-        }
-        .theme-flip .colon { color: #333; animation: blink 1s infinite; position: relative; top: -5px;}
-        .theme-flip .date { 
-            color: #333; margin-top: 15px; font-weight: 700; 
-            letter-spacing: 2px; font-size: 0.9rem; text-transform: uppercase; 
-        }
-        /* Dark mode spécifique pour le Flip */
         @media (prefers-color-scheme: dark) {
-            .theme-flip .time span:not(.colon) { background: #eee; color: #222; }
-            .theme-flip .colon { color: #eee; }
-            .theme-flip .date { color: #eee; }
+            body { color: #d4d4d4; }
         }
 
-        /* --- THÈME 2: TERMINAL (Hacker) --- */
-        body.theme-terminal { font-family: 'Roboto Mono', monospace; color: #00ff41; text-shadow: 0 0 5px rgba(0,255,65,0.5); }
-        .theme-terminal .time { font-size: 3.5rem; font-weight: 500; }
-        .theme-terminal .time::before { content: '> '; opacity: 0.8; font-size: 0.8em; }
-        .theme-terminal .time::after { content: '_'; animation: blink 1s infinite step-end; }
-        .theme-terminal .date { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; color: #00ff41; }
-        .theme-terminal .colon { animation: none; }
-
-        /* --- THÈME 3: SERIF (Éditorial/Luxe) --- */
-        body.theme-serif { font-family: 'Playfair Display', serif; color: #222; }
-        .theme-serif .time { font-size: 5.5rem; font-style: italic; line-height: 0.9; }
-        .theme-serif .date { font-family: 'Roboto', sans-serif; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 10px; border-top: 1px solid #222; padding-top: 5px; }
-        @media (prefers-color-scheme: dark) { 
-            body.theme-serif { color: #f4f4f4; }
-            .theme-serif .date { border-top-color: #f4f4f4; }
+        .container {
+            text-align: center;
+            /* Empêche le texte de se casser bizarrement sur très petit écran */
+            white-space: nowrap; 
         }
 
-        /* --- THÈME 4: NEON (Cyberpunk) --- */
-        body.theme-neon { font-family: 'Orbitron', sans-serif; color: #fff; }
-        .theme-neon .time { 
-            font-size: 4rem; 
-            text-shadow: 0 0 10px #00e6e6, 0 0 20px #00e6e6, 0 0 40px #00e6e6;
-            color: #e0ffff;
-        }
-        .theme-neon .date { 
-            margin-top: 10px; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase;
-            text-shadow: 0 0 5px #ff00de, 0 0 10px #ff00de;
-            color: #ffccff;
+        /* --- HEURE --- */
+        #time {
+            font-size: 3.5rem; /* Gros et Lisible */
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            margin-bottom: 5px;
+            font-variant-numeric: tabular-nums; /* Empêche les chiffres de bouger */
         }
 
-        /* Animation Blink */
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        
-        /* Cacher la séparation si le style n'en veut pas */
-        .hide-colon .colon { display: none; }
-        
+        /* --- DATE --- */
+        #date {
+            font-size: 1rem;
+            color: #9b9a97;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        /* Option pour colorer l'heure */
+        .colored-time {
+            color: var(--accent-color);
+        }
+
     </style>
 </head>
-<body class="theme-default"> <div class="clock-container">
-        <div class="time" id="timeDisplay"></div>
-        <div class="date" id="dateDisplay"></div>
+<body>
+
+    <div class="container">
+        <div id="time">00:00</div>
+        <div id="date">Chargement...</div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- CONFIG VIA URL ---
         const params = new URLSearchParams(window.location.search);
-        const THEME = params.get('theme') || 'default'; // default, flip, terminal, serif, neon
-        const SHOW_SECONDS = params.get('seconds') === 'true';
-        const IS_12H = params.get('format') === '12';
+        // Options : '12' ou '24' (défaut 24)
+        const FORMAT = params.get('format') === '12' ? '12' : '24';
+        // Options : 'true' ou 'false' (défaut false)
+        const SECONDS = params.get('seconds') === 'true';
+        // Couleur personnalisée (ex: ?color=blue)
+        const COLOR = params.get('color');
 
-        // Application du thème au body
-        document.body.className = `theme-${THEME}`;
+        const timeEl = document.getElementById('time');
+        const dateEl = document.getElementById('date');
 
-        const timeEl = document.getElementById('timeDisplay');
-        const dateEl = document.getElementById('dateDisplay');
+        // Gestion des couleurs Google
+        const googleColors = {
+            'blue': '#4285f4', 'red': '#ea4335', 'yellow': '#fbbc04', 
+            'green': '#34a853', 'purple': '#a142f4'
+        };
+
+        if (COLOR) {
+            const finalColor = googleColors[COLOR] || COLOR;
+            timeEl.style.color = finalColor;
+        }
 
         function updateClock() {
             const now = new Date();
+
+            // 1. HEURE
             let hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const secondsStr = String(now.getSeconds()).padStart(2, '0');
+            let ampm = '';
 
-            // Format 12h
-            if (IS_12H) {
+            if (FORMAT === '12') {
+                ampm = hours >= 12 ? ' PM' : ' AM';
                 hours = hours % 12;
-                hours = hours ? hours : 12;
+                hours = hours ? hours : 12; // L'heure '0' devient '12'
             } else {
                 hours = String(hours).padStart(2, '0');
             }
 
-            // Construction HTML différente selon les thèmes si besoin
-            let separator = ':';
-            // Pour le thème Flip, on structure différemment pour les cases
-            if (THEME === 'flip') {
-                timeEl.innerHTML = `<span>${hours}</span><span class="colon">:</span><span>${minutes}</span>` + (SHOW_SECONDS ? `<span class="colon">:</span><span>${seconds}</span>` : '');
-            } 
-            else {
-                // Thèmes Textuels
-                let timeText = `${hours}:${minutes}`;
-                if (SHOW_SECONDS) timeText += `:${seconds}`;
-                
-                // Pour le terminal on n'injecte que du texte
-                if (THEME === 'terminal') {
-                    timeEl.textContent = timeText;
-                } else {
-                    // Pour les autres, on garde le span colon pour l'animation éventuelle
-                    timeEl.innerHTML = timeText.replace(/:/g, '<span class="colon">:</span>');
-                }
-            }
+            let timeString = `${hours}:${minutes}`;
+            if (SECONDS) timeString += `:${secondsStr}`;
+            if (FORMAT === '12') timeString += `<span style="font-size:0.4em; margin-left:5px;">${ampm}</span>`;
 
-            // Date
-            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
-            // Petite variation pour le terminal (date courte)
-            if (THEME === 'terminal') {
-                const d = now.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-                dateEl.textContent = d.toLowerCase().replace('.', '').replace(/ /g, '_');
-            } else {
-                dateEl.textContent = now.toLocaleDateString('fr-FR', dateOptions);
-            }
+            timeEl.innerHTML = timeString;
+
+            // 2. DATE
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            // On force le français
+            dateEl.textContent = now.toLocaleDateString('fr-FR', options);
         }
 
-        updateClock();
         setInterval(updateClock, 1000);
-
+        updateClock();
     </script>
 </body>
 </html>
