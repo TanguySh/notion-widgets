@@ -3,55 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Cloud To-Do</title>
+    <title>Notion To-Do Final</title>
     <style>
         /* --- VARIABLES --- */
         :root { --accent-color: #4285f4; --checkmark-color: white; }
-
         /* --- BASE --- */
-        body {
-            margin: 0; padding: 0;
-            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-            color: #37352f; background-color: transparent; min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center; 
-        }
-
-        @media (prefers-color-scheme: dark) {
-            body { color: #d4d4d4; }
-            input { color: #d4d4d4 !important; }
-            .task-item { border-bottom-color: rgba(255,255,255,0.06) !important; }
-            .clear-all-btn { color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.2) !important; } 
-            .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; color: #ff6b6b !important; }
-            .modal-box { background: #2f3437 !important; border-color: rgba(255,255,255,0.1) !important; }
-            .modal-box p { color: #d4d4d4; }
-            .btn-cancel { color: #d4d4d4 !important; border-color: rgba(255,255,255,0.2) !important; }
-        }
-
+        body { margin: 0; padding: 0; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; color: #37352f; background-color: transparent; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        @media (prefers-color-scheme: dark) { body { color: #d4d4d4; } input { color: #d4d4d4 !important; } .task-item { border-bottom-color: rgba(255,255,255,0.06) !important; } .clear-all-btn { color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.2) !important; } .clear-all-btn:hover { background-color: rgba(255,255,255,0.1) !important; color: #ff6b6b !important; } .modal-box { background: #2f3437 !important; border-color: rgba(255,255,255,0.1) !important; } .modal-box p { color: #d4d4d4; } .btn-cancel { color: #d4d4d4 !important; border-color: rgba(255,255,255,0.2) !important; } }
         .container { width: 90%; max-width: 350px; height: auto; display: flex; flex-direction: column; padding-top: 10px; }
 
-        /* --- HEADER --- */
-        .header-wrapper { position: relative; width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        h1 { font-size: 1.15rem; font-weight: 600; margin: 0; opacity: 1; letter-spacing: -0.02em; width: auto; transition: all 0.3s ease; }
-        h1.chip-style { width: 100%; padding: 10px 0 10px 15px; border-radius: 8px; text-align: left; text-transform: uppercase; font-size: 1rem; line-height: 1.5; letter-spacing: 0.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); box-sizing: border-box; }
+        /* --- HEADER FIXED --- */
+        .header-wrapper { position: relative; width: 100%; margin-bottom: 10px; } /* Plus de flex ici */
+        
+        h1 { font-size: 1.15rem; font-weight: 600; margin: 0; opacity: 1; letter-spacing: -0.02em; width: 100%; transition: all 0.3s ease; display: block; }
+        
+        h1.chip-style { padding: 10px 0 10px 15px; border-radius: 8px; text-align: left; text-transform: uppercase; font-size: 1rem; line-height: 1.5; letter-spacing: 0.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); box-sizing: border-box; }
 
-        /* Loader Sync */
-        .sync-status { font-size: 0.7rem; color: #9aa0a6; margin-right: 5px; opacity: 0; transition: opacity 0.3s; }
+        /* CONTROLS (Sync + Btn) EN ABSOLUTE */
+        .header-controls { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; z-index: 10; }
+        
+        .header-wrapper.has-bg .header-controls { right: 10px; } /* Petit padding si fond coloré */
+
+        .sync-status { font-size: 0.7rem; color: #9aa0a6; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .sync-status.visible { opacity: 1; }
+        /* Si fond coloré, le texte sync devient blanc translucide */
+        .header-wrapper.has-bg .sync-status { color: rgba(255,255,255,0.7); }
 
         .clear-all-btn { font-family: inherit; font-size: 0.7rem; color: #9b9a97; background: transparent; border: 1px solid rgba(55, 53, 47, 0.16); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.2s; opacity: 0; pointer-events: none; }
         .clear-all-btn.visible { opacity: 1; pointer-events: auto; }
         .clear-all-btn:hover { background-color: rgba(55, 53, 47, 0.08); color: #d93025; border-color: #d93025; }
-        .header-wrapper.has-bg .clear-all-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(2px); }
+        
+        .header-wrapper.has-bg .clear-all-btn { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(2px); }
         .header-wrapper.has-bg .clear-all-btn:hover { background: white; color: #d93025; }
 
-        /* --- INPUT --- */
+        /* --- INPUT & LIST --- */
         .input-group { margin-top: 10px; position: relative; display: flex; align-items: center; }
         input { width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(55, 53, 47, 0.16); padding: 8px 0; font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.3s; color: inherit; }
         input::placeholder { color: rgba(55, 53, 47, 0.4); }
         input:focus { border-bottom-color: var(--accent-color); }
-
-        /* --- LISTE --- */
-        ul { list-style: none; padding: 0; margin: 0; flex-grow: 0; height: auto; width: 100%; min-height: 20px;}
+        ul { list-style: none; padding: 0; margin: 0; flex-grow: 0; height: auto; width: 100%; min-height: 10px; }
         .task-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55, 53, 47, 0.09); animation: fadeIn 0.3s ease; }
         .checkbox { width: 16px; height: 16px; border: 2px solid #9b9a97; border-radius: 3px; margin-right: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; flex-shrink: 0; }
         .task-item.completed .checkbox { background-color: var(--accent-color); border-color: var(--accent-color); }
@@ -63,7 +53,7 @@
         .delete-btn svg { width: 14px; height: 14px; fill: currentColor; }
         .delete-btn:hover { color: #eb5757; }
         .task-item:hover .delete-btn { opacity: 1; }
-
+        
         /* --- MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); backdrop-filter: blur(3px); z-index: 100; display: none; align-items: center; justify-content: center; }
         .modal-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 80%; max-width: 260px; border: 1px solid rgba(0,0,0,0.1); text-align: center; animation: popIn 0.2s ease; }
@@ -72,233 +62,56 @@
         .modal-btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; font-family: inherit; }
         .btn-cancel { background: transparent; color: #5f6368; border: 1px solid #dadce0; }
         .btn-confirm { background: var(--accent-color); color: white; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
-
     <div class="container" id="mainContainer">
         <div class="header-wrapper" id="headerWrapper">
             <h1 id="listTitle">To-Do List</h1>
-            <div style="display:flex; align-items:center;">
+            <div class="header-controls">
                 <span id="syncStatus" class="sync-status">Sync...</span>
                 <button id="clearBtn" class="clear-all-btn" onclick="openModal()">Clear</button>
             </div>
         </div>
-        
-        <ul id="taskList">
-            <li style="text-align:center; padding:20px; color:#999; font-size:0.8rem;">Chargement...</li>
-        </ul>
-
-        <div class="input-group">
-            <input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off">
-        </div>
+        <ul id="taskList"><li style="text-align:center; padding:20px; color:#999; font-size:0.8rem;">Loading...</li></ul>
+        <div class="input-group"><input type="text" id="taskInput" placeholder="Ajouter une tâche..." autocomplete="off"></div>
     </div>
-
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
             <p class="modal-msg">Effacer toute la liste ?</p>
-            <div class="modal-btns">
-                <button class="modal-btn btn-cancel" onclick="closeModal()">Annuler</button>
-                <button class="modal-btn btn-confirm" onclick="confirmClear()">Valider</button>
-            </div>
+            <div class="modal-btns"><button class="modal-btn btn-cancel" onclick="closeModal()">Annuler</button><button class="modal-btn btn-confirm" onclick="confirmClear()">Valider</button></div>
         </div>
     </div>
-
     <script>
-        // ============================================
-        // ⚠️ CONFIGURATION CLOUD (REMPLIS CECI !)
-        // ============================================
-        
-        // Remplace par ton ID de casier (ex: "65c4f...")
+        // CONFIGURATION CLOUD
         const BIN_ID = "6985f9a543b1c97be96a4813"; 
-        
-        // Remplace par ta clé API (ex: "$2a$10$...")
         const API_KEY = "$2a$10$A/bxCPyTSD17CowfTI8XsO.bCVakowlw0adl3XUqkxxcd9Cb6eSua"; 
-
-        // ============================================
 
         const params = new URLSearchParams(window.location.search);
         const LIST_NAME = params.get('name') || 'default'; 
         const TITLE = params.get('title') || 'To-Do List';
-        const BG_COLOR = params.get('bg'); 
-        const TEXT_COLOR = params.get('color');
-        const WIDTH = params.get('width');
+        const BG_COLOR = params.get('bg'); const TEXT_COLOR = params.get('color'); const WIDTH = params.get('width');
+        const titleEl = document.getElementById('listTitle'); const headerWrapper = document.getElementById('headerWrapper'); const container = document.getElementById('mainContainer'); const syncStatus = document.getElementById('syncStatus');
 
-        const titleEl = document.getElementById('listTitle');
-        const headerWrapper = document.getElementById('headerWrapper');
-        const container = document.getElementById('mainContainer');
-        const syncStatus = document.getElementById('syncStatus');
-
-        if (WIDTH === 'full') { container.style.maxWidth = '100%'; container.style.width = '100%'; } 
-        else if (WIDTH) { container.style.maxWidth = WIDTH + 'px'; container.style.width = '100%'; }
-
+        if (WIDTH === 'full') { container.style.maxWidth = '100%'; container.style.width = '100%'; } else if (WIDTH) { container.style.maxWidth = WIDTH + 'px'; container.style.width = '100%'; }
         titleEl.textContent = TITLE;
-
-        const googleColors = {
-            'blue': '#4285f4', 'red': '#ea4335', 'yellow': '#fbbc04', 
-            'green': '#34a853', 'black': '#37352f', 'grey': '#9aa0a6',
-            'pastel-green': '#dbeddb', 'pastel-red': '#ffeef0', 'pastel-blue': '#e3f2fd'
-        };
-
-        if (BG_COLOR) {
-            titleEl.classList.add('chip-style');
-            headerWrapper.classList.add('has-bg');
-            const finalBg = googleColors[BG_COLOR] || BG_COLOR;
-            let finalTx = 'white';
-            titleEl.style.backgroundColor = finalBg;
-            document.documentElement.style.setProperty('--accent-color', finalBg);
-            if (TEXT_COLOR) finalTx = TEXT_COLOR;
-            else {
-                const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb');
-                finalTx = isLight ? '#37352f' : 'white';
-            }
-            titleEl.style.color = finalTx;
-            document.documentElement.style.setProperty('--checkmark-color', finalTx);
-        } else { titleEl.style.textAlign = 'left'; }
-        
+        const googleColors = { 'blue': '#4285f4', 'red': '#ea4335', 'yellow': '#fbbc04', 'green': '#34a853', 'black': '#37352f', 'grey': '#9aa0a6', 'pastel-green': '#dbeddb', 'pastel-red': '#ffeef0', 'pastel-blue': '#e3f2fd' };
+        if (BG_COLOR) { titleEl.classList.add('chip-style'); headerWrapper.classList.add('has-bg'); const finalBg = googleColors[BG_COLOR] || BG_COLOR; let finalTx = 'white'; titleEl.style.backgroundColor = finalBg; document.documentElement.style.setProperty('--accent-color', finalBg); if (TEXT_COLOR) finalTx = TEXT_COLOR; else { const isLight = (BG_COLOR === 'yellow' || BG_COLOR.includes('pastel') || BG_COLOR === '#fbbc04' || BG_COLOR === '#dbeddb'); finalTx = isLight ? '#37352f' : 'white'; } titleEl.style.color = finalTx; document.documentElement.style.setProperty('--checkmark-color', finalTx); } else { titleEl.style.textAlign = 'left'; }
         if(TITLE === 'none') { titleEl.style.display = 'none'; headerWrapper.style.display = 'none'; }
 
-        // --- DATA ---
-        let tasks = [];
-        const input = document.getElementById('taskInput');
-        const list = document.getElementById('taskList');
-        const clearBtn = document.getElementById('clearBtn');
-        const modal = document.getElementById('customModal');
-        let saveTimeout;
+        let tasks = []; const input = document.getElementById('taskInput'); const list = document.getElementById('taskList'); const clearBtn = document.getElementById('clearBtn'); const modal = document.getElementById('customModal'); let saveTimeout;
 
-        // --- CLOUD FUNCTIONS ---
-        async function loadFromCloud() {
-            syncStatus.textContent = "Loading...";
-            syncStatus.classList.add('visible');
-            try {
-                // Si BIN_ID n'est pas rempli, on utilise localStorage comme fallback
-                if(BIN_ID.includes("REMPLACE")) {
-                    console.warn("Mode LocalStorage (Pas de clé API)");
-                    tasks = JSON.parse(localStorage.getItem(`notion_todo_${LIST_NAME}`)) || [];
-                    render();
-                    syncStatus.classList.remove('visible');
-                    return;
-                }
+        async function loadFromCloud() { syncStatus.textContent = "Loading..."; syncStatus.classList.add('visible'); try { if(BIN_ID.includes("REMPLACE")) { tasks = JSON.parse(localStorage.getItem(`notion_todo_${LIST_NAME}`)) || []; render(); syncStatus.classList.remove('visible'); return; } const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } }); if(response.ok) { const data = await response.json(); tasks = data.record.tasks || []; } } catch(e) { console.error(e); } render(); syncStatus.classList.remove('visible'); }
+        async function saveToCloud() { syncStatus.textContent = "Saving..."; syncStatus.classList.add('visible'); if(BIN_ID.includes("REMPLACE")) { localStorage.setItem(`notion_todo_${LIST_NAME}`, JSON.stringify(tasks)); setTimeout(() => syncStatus.classList.remove('visible'), 500); return; } try { await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: tasks }) }); } catch(e) { console.error(e); } setTimeout(() => syncStatus.classList.remove('visible'), 1000); }
+        function triggerSave() { clearTimeout(saveTimeout); syncStatus.textContent = "Pending..."; syncStatus.classList.add('visible'); saveTimeout = setTimeout(saveToCloud, 1000); }
 
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                
-                if(response.ok) {
-                    const data = await response.json();
-                    // On gère plusieurs listes dans le même Bin si besoin via le nom
-                    // Mais pour faire simple ici, le Bin = La liste
-                    // Si tu veux séparer pro/perso, crée 2 Bins différents sur le site.
-                    tasks = data.record.tasks || []; 
-                } else {
-                    console.error("Erreur chargement cloud");
-                }
-            } catch(e) {
-                console.error(e);
-            }
-            render();
-            syncStatus.classList.remove('visible');
-        }
-
-        async function saveToCloud() {
-            syncStatus.textContent = "Saving...";
-            syncStatus.classList.add('visible');
-            
-            // Fallback LocalStorage
-            if(BIN_ID.includes("REMPLACE")) {
-                localStorage.setItem(`notion_todo_${LIST_NAME}`, JSON.stringify(tasks));
-                setTimeout(() => syncStatus.classList.remove('visible'), 500);
-                return;
-            }
-
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify({ tasks: tasks })
-                });
-            } catch(e) {
-                console.error("Erreur sauvegarde", e);
-                syncStatus.textContent = "Error";
-            }
-            
-            setTimeout(() => syncStatus.classList.remove('visible'), 1000);
-        }
-
-        // Système "Debounce" : on ne sauvegarde pas à chaque frappe, on attend 1s
-        function triggerSave() {
-            clearTimeout(saveTimeout);
-            syncStatus.textContent = "Pending...";
-            syncStatus.classList.add('visible');
-            saveTimeout = setTimeout(saveToCloud, 1000);
-        }
-
-        // --- UI FUNCTIONS ---
-        function render() {
-            list.innerHTML = '';
-            if (tasks.length > 0) clearBtn.classList.add('visible');
-            else clearBtn.classList.remove('visible');
-
-            if(tasks.length === 0) {
-                 // Liste vide visuelle si besoin
-            }
-
-            tasks.forEach((task, index) => {
-                const li = document.createElement('li');
-                li.className = `task-item ${task.done ? 'completed' : ''}`;
-                li.innerHTML = `
-                    <div class="checkbox" onclick="toggleTask(${index})">
-                        <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    </div>
-                    <span class="task-text" onclick="toggleTask(${index})">${task.text}</span>
-                    <button class="delete-btn" onclick="deleteTask(${index})">
-                        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                    </button>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        // --- ACTIONS ---
-        function openModal() { modal.style.display = 'flex'; }
-        function closeModal() { modal.style.display = 'none'; }
-        
-        function confirmClear() {
-            tasks = [];
-            render();
-            triggerSave(); // Sauvegarde cloud
-            closeModal();
-        }
-
-        function addTask(text) {
-            if (!text.trim()) return;
-            tasks.push({ text: text, done: false });
-            input.value = '';
-            render();
-            triggerSave(); // Sauvegarde cloud
-        }
-        function toggleTask(index) { 
-            tasks[index].done = !tasks[index].done; 
-            render(); 
-            triggerSave(); // Sauvegarde cloud
-        }
-        function deleteTask(index) { 
-            tasks.splice(index, 1); 
-            render(); 
-            triggerSave(); // Sauvegarde cloud
-        }
-
+        function render() { list.innerHTML = ''; if (tasks.length > 0) clearBtn.classList.add('visible'); else clearBtn.classList.remove('visible'); if(tasks.length === 0) { } tasks.forEach((task, index) => { const li = document.createElement('li'); li.className = `task-item ${task.done ? 'completed' : ''}`; li.innerHTML = `<div class="checkbox" onclick="toggleTask(${index})"><svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><span class="task-text" onclick="toggleTask(${index})">${task.text}</span><button class="delete-btn" onclick="deleteTask(${index})"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>`; list.appendChild(li); }); }
+        function openModal() { modal.style.display = 'flex'; } function closeModal() { modal.style.display = 'none'; } function confirmClear() { tasks = []; render(); triggerSave(); closeModal(); }
+        function addTask(text) { if (!text.trim()) return; tasks.push({ text: text, done: false }); input.value = ''; render(); triggerSave(); } function toggleTask(index) { tasks[index].done = !tasks[index].done; render(); triggerSave(); } function deleteTask(index) { tasks.splice(index, 1); render(); triggerSave(); }
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(input.value); });
-        
-        // Initialisation
         loadFromCloud();
-
     </script>
 </body>
 </html>
